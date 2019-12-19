@@ -414,11 +414,8 @@ main(void)
     
     /* Read each expression as a premise or a conclusion */
     p = mkparser(stdin);
-    for (nexpr = 0; (e = readcond(p)) != NULL; ++nexpr) {
+    for (nexpr = 0; (e = readcond(p)) != NULL; ++nexpr)
         expr[nexpr] = e;
-        print(stderr, p, e);
-        fputc('\n', stderr);
-    }
 
     valid = 1;
     n = 1 << p->nvar;
