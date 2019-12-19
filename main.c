@@ -108,10 +108,23 @@ readtoken(Parser *p)
     len = 0;
     while ((ch = fgetc(p->fp)) != EOF && isspace(ch))
         ;
-    if (ch == EOF)
+    if (ch == EOF) {
+        PRINT("Read EOF");
         RETURN(EOF);
+    }
     p->tok[len++] = ch;
-    if (isalpha(ch)) {
+    if (ch == '(') {
+        PRINT("Read left paren");
+        p->tok[len] = '\0';
+        RETURN(LPAREN);
+    } else if (ch == ')') {
+        PRINT("Read right paren");
+        p->tok[len] = '\0';
+        RETURN(RPAREN);
+    } else if (ch == '~') {
+        p->tok[len] = '\0';
+        RETURN(NOT);
+    } else if (isalpha(ch)) {
         for ( ; (ch = fgetc(p->fp)) != EOF && isalpha(ch); ++len) {
             p->tok[len] = ch;
         }
@@ -130,21 +143,19 @@ readtoken(Parser *p)
         RETURN(NOT);
     } else if (!strcmp("or", p->tok)) {
         RETURN(OR);
-    } else if (!strcmp("not", p->tok)) {
-        RETURN(NOT);
+    } else if (!strcmp("and", p->tok)) {
+        RETURN(AND);
     } else if (!strcmp("<->", p->tok)) {
         RETURN(IFF);
     } else if (!strcmp("->", p->tok)) {
         RETURN(IF);
-    } else if (!strcmp("(", p->tok)) {
-        RETURN(LPAREN);
-    } else if (!strcmp(")", p->tok)) {
-        RETURN(RPAREN);
     } else {
         RETURN(ID);
     }
     RETURN(EOF);
 }
+
+static char * tokenstr(int);
 
 static void
 accept(Parser *p)
@@ -152,6 +163,7 @@ accept(Parser *p)
     ENTER("accept");
     assert(p != NULL);
     p->next = readtoken(p);
+    PRINT("NEXT TOKEN: %s", tokenstr(p->next));
     EXIT();
 }
 
@@ -224,7 +236,6 @@ readterm(Parser *p)
         t = mknode(ID, i, NULL, NULL);
         break;
     case NOT:
-        PRINT("Got a NOT");
         accept(p);
         t = mknode(NOT, 0, readterm(p), NULL);
         break;
